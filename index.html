@@ -746,46 +746,93 @@
         
         // Fungsi untuk parsing CSV yang diperbaiki
         function parseCSV(text) {
-            // Bersihkan teks dari karakter non-printable dan header yang tidak perlu
-            text = text.replace(/^\s*[\r\n]/gm, ''); // Hapus baris kosong
+            // Deteksi jika file adalah binary (Excel/ZIP/dll)
+            function isBinaryContent(content) {
+                // Cek apakah konten mengandung banyak karakter non-printable
+                const nonPrintableChars = content.split('').filter(char => {
+                    const code = char.charCodeAt(0);
+                    return (code < 32 && code !== 9 && code !== 10 && code !== 13) || code > 126;
+                }).length;
+                
+                // Jika lebih dari 5% karakter adalah non-printable, kemungkinan binary
+                return (nonPrintableChars / content.length) > 0.05;
+            }
             
-            // Deteksi jika file dimulai dengan PK (file Excel/ZIP) dan berikan pesan error
-            if (text.startsWith('PK')) {
-                alert('File yang Anda unggah sepertinya bukan file CSV yang valid. Pastikan file dalam format CSV (text) dan bukan Excel (.xlsx).');
+            // Jika konten terdeteksi sebagai binary
+            if (isBinaryContent(text)) {
+                alert('File yang Anda unggah sepertinya bukan file CSV yang valid. File terdeteksi sebagai binary (Excel/ZIP/dll). Pastikan file dalam format CSV (text) dan bukan format binary.');
                 return [];
             }
             
+            // Bersihkan teks dari karakter non-printable dan header yang tidak perlu
+            let cleanedText = '';
+            let inTextData = false;
+            let dataStarted = false;
+            
+            // Cari bagian teks yang valid
+            for (let i = 0; i < text.length; i++) {
+                const charCode = text.charCodeAt(i);
+                
+                // Jika menemukan karakter printable, mulai mengumpulkan data
+                if ((charCode >= 32 && charCode <= 126) || charCode === 9 || charCode === 10 || charCode === 13) {
+                    if (!inTextData) {
+                        inTextData = true;
+                    }
+                    cleanedText += text[i];
+                } else if (inTextData) {
+                    // Jika sudah dalam mode teks dan menemukan karakter non-printable,
+                    // tambahkan newline untuk memisahkan bagian data yang valid
+                    cleanedText += '\n';
+                    inTextData = false;
+                }
+            }
+            
+            // Hapus baris kosong berlebih
+            cleanedText = cleanedText.replace(/\n\s*\n/g, '\n').trim();
+            
             // Coba deteksi pemisah (koma atau titik koma)
             let separator = ',';
-            if (text.indexOf(';') > -1 && text.indexOf(',') === -1) {
+            if (cleanedText.indexOf(';') > -1 && cleanedText.indexOf(',') === -1) {
                 separator = ';';
             }
             
-            const lines = text.split('\n');
+            // Split berdasarkan baris
+            const lines = cleanedText.split('\n');
             const result = [];
             
+            // Proses setiap baris
             for (let i = 0; i < lines.length; i++) {
-                if (lines[i].trim() === '') continue;
+                const line = lines[i].trim();
+                if (line === '') continue;
                 
                 // Jika baris dimulai dengan karakter aneh, lewati
-                if (lines[i].charCodeAt(0) < 32 || lines[i].charCodeAt(0) > 126) {
+                if (line.charCodeAt(0) < 32 || line.charCodeAt(0) > 126) {
                     continue;
                 }
                 
-                const values = lines[i].split(separator);
-                if (values.length >= 5) {
+                // Split baris menjadi kolom
+                const values = line.split(separator);
+                
+                // Pastikan ada minimal 2 kolom (NRP dan password)
+                if (values.length >= 2) {
                     // Bersihkan nilai dari karakter khusus dan quotes
                     const cleanValues = values.map(val => {
                         return val.trim().replace(/^["']|["']$/g, ''); // Hapus quotes di awal dan akhir
                     });
                     
-                    result.push({
-                        nrp: cleanValues[0],
-                        password: cleanValues[1],
-                        name: cleanValues[2],
-                        code: cleanValues[3],
-                        status: cleanValues[4].toLowerCase()
-                    });
+                    // Buat objek kandidat dengan nilai default jika tidak ada
+                    const candidate = {
+                        nrp: cleanValues[0] || '',
+                        password: cleanValues[1] || '',
+                        name: cleanValues[2] || '',
+                        code: cleanValues[3] || '',
+                        status: (cleanValues[4] || '').toLowerCase() === 'lulus' ? 'lulus' : 'tidak'
+                    };
+                    
+                    // Validasi data minimal
+                    if (candidate.nrp && candidate.password) {
+                        result.push(candidate);
+                    }
                 }
             }
             
@@ -945,7 +992,7 @@
                         document.getElementById('hayooModal').classList.remove('hidden');
                         
                         // Tambahkan efek shake
-                        const hayooModal = document.getElementById('hayooModal').querySelector('.shake-animation');
+                        const hayooModal = document.querySelector('#hayooModal .shake-animation');
                         hayooModal.classList.remove('shake-animation');
                         setTimeout(() => {
                             hayooModal.classList.add('shake-animation');
@@ -1055,21 +1102,25 @@
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        const csvData = parseCSV(e.target.result);
-                        
-                        if (csvData.length === 0) {
-                            alert('Tidak ada data valid yang ditemukan dalam file. Pastikan format file sesuai.');
-                            return;
-                        }
-                        
-                        // Show preview
-                        const csvPreview = document.getElementById('csvPreview');
-                        const csvPreviewBody = document.getElementById('csvPreviewBody');
-                        
-                        csvPreviewBody.innerHTML = '';
-                        
-                        csvData.forEach((row, index) => {
-                            if (index < 5) { // Show only first 5 rows in preview
+                        try {
+                            const content = e.target.result;
+                            const csvData = parseCSV(content);
+                            
+                            if (csvData.length === 0) {
+                                alert('Tidak ada data valid yang ditemukan dalam file. Pastikan format file sesuai.');
+                                return;
+                            }
+                            
+                            // Show preview
+                            const csvPreview = document.getElementById('csvPreview');
+                            const csvPreviewBody = document.getElementById('csvPreviewBody');
+                            
+                            csvPreviewBody.innerHTML = '';
+                            
+                            // Tampilkan maksimal 10 baris untuk preview
+                            const previewRows = csvData.slice(0, 10);
+                            
+                            previewRows.forEach((row) => {
                                 const tr = document.createElement('tr');
                                 tr.className = 'border-b border-gray-700';
                                 tr.innerHTML = `
@@ -1080,14 +1131,33 @@
                                     <td class="py-2 px-3">${row.status || '-'}</td>
                                 `;
                                 csvPreviewBody.appendChild(tr);
+                            });
+                            
+                            // Tambahkan informasi jumlah data
+                            if (csvData.length > 10) {
+                                const tr = document.createElement('tr');
+                                tr.className = 'border-b border-gray-700';
+                                tr.innerHTML = `
+                                    <td colspan="5" class="py-2 px-3 text-center text-gray-400">
+                                        ... dan ${csvData.length - 10} data lainnya (total ${csvData.length} data)
+                                    </td>
+                                `;
+                                csvPreviewBody.appendChild(tr);
                             }
-                        });
-                        
-                        csvPreview.classList.remove('hidden');
-                        
-                        // Store the parsed data for later use
-                        window.parsedCsvData = csvData;
+                            
+                            csvPreview.classList.remove('hidden');
+                            
+                            // Store the parsed data for later use
+                            window.parsedCsvData = csvData;
+                            
+                            console.log(`Berhasil memproses ${csvData.length} data dari CSV`);
+                        } catch (error) {
+                            console.error("Error saat memproses file:", error);
+                            alert(`Error saat memproses file: ${error.message}`);
+                        }
                     };
+                    
+                    // Baca file sebagai text
                     reader.readAsText(file);
                 }
             });
@@ -1104,21 +1174,25 @@
                 const reader = new FileReader();
                 
                 reader.onload = function(e) {
-                    const csvData = parseCSV(e.target.result);
-                    
-                    if (csvData.length === 0) {
-                        alert('Tidak ada data valid yang ditemukan dalam file. Pastikan format file sesuai.');
-                        return;
-                    }
-                    
-                    // Show preview
-                    const csvPreview = document.getElementById('csvPreview');
-                    const csvPreviewBody = document.getElementById('csvPreviewBody');
-                    
-                    csvPreviewBody.innerHTML = '';
-                    
-                    csvData.forEach((row, index) => {
-                        if (index < 5) { // Show only first 5 rows in preview
+                    try {
+                        const content = e.target.result;
+                        const csvData = parseCSV(content);
+                        
+                        if (csvData.length === 0) {
+                            alert('Tidak ada data valid yang ditemukan dalam file. Pastikan format file sesuai.');
+                            return;
+                        }
+                        
+                        // Show preview
+                        const csvPreview = document.getElementById('csvPreview');
+                        const csvPreviewBody = document.getElementById('csvPreviewBody');
+                        
+                        csvPreviewBody.innerHTML = '';
+                        
+                        // Tampilkan maksimal 10 baris untuk preview
+                        const previewRows = csvData.slice(0, 10);
+                        
+                        previewRows.forEach((row) => {
                             const tr = document.createElement('tr');
                             tr.className = 'border-b border-gray-700';
                             tr.innerHTML = `
@@ -1129,15 +1203,33 @@
                                 <td class="py-2 px-3">${row.status || '-'}</td>
                             `;
                             csvPreviewBody.appendChild(tr);
+                        });
+                        
+                        // Tambahkan informasi jumlah data
+                        if (csvData.length > 10) {
+                            const tr = document.createElement('tr');
+                            tr.className = 'border-b border-gray-700';
+                            tr.innerHTML = `
+                                <td colspan="5" class="py-2 px-3 text-center text-gray-400">
+                                    ... dan ${csvData.length - 10} data lainnya (total ${csvData.length} data)
+                                </td>
+                            `;
+                            csvPreviewBody.appendChild(tr);
                         }
-                    });
-                    
-                    csvPreview.classList.remove('hidden');
-                    
-                    // Store the parsed data for later use
-                    window.parsedCsvData = csvData;
+                        
+                        csvPreview.classList.remove('hidden');
+                        
+                        // Store the parsed data for later use
+                        window.parsedCsvData = csvData;
+                        
+                        console.log(`Berhasil memproses ${csvData.length} data dari CSV`);
+                    } catch (error) {
+                        console.error("Error saat memproses file:", error);
+                        alert(`Error saat memproses file: ${error.message}`);
+                    }
                 };
                 
+                // Baca file sebagai text
                 reader.readAsText(file);
             });
             
@@ -1163,46 +1255,65 @@
                 // Tampilkan loading message
                 alert(`Memulai import ${window.parsedCsvData.length} data...`);
                 
-                // Import data satu per satu
-                window.parsedCsvData.forEach((candidate, index) => {
-                    // Validasi data
-                    if (!candidate.nrp || !candidate.password || !candidate.name || !candidate.code || !candidate.status) {
-                        console.error("Data tidak lengkap:", candidate);
-                        errorCount++;
+                // Batch import untuk kinerja yang lebih baik
+                const batchSize = 50;
+                const totalBatches = Math.ceil(window.parsedCsvData.length / batchSize);
+                
+                function processBatch(batchIndex) {
+                    if (batchIndex >= totalBatches) {
+                        // Semua batch selesai
+                        alert(`Import selesai. ${importCount} data berhasil diimpor, ${errorCount} data gagal.`);
+                        loadCandidates();
+                        document.getElementById('csvPreview').classList.add('hidden');
+                        document.getElementById('csvFileInput').value = '';
                         return;
                     }
                     
-                    // Pastikan status valid
-                    if (candidate.status !== 'lulus' && candidate.status !== 'tidak') {
-                        candidate.status = 'tidak'; // Default ke tidak lulus jika status tidak valid
-                    }
+                    const startIdx = batchIndex * batchSize;
+                    const endIdx = Math.min(startIdx + batchSize, window.parsedCsvData.length);
+                    const currentBatch = window.parsedCsvData.slice(startIdx, endIdx);
                     
-                    candidatesRef.push(candidate)
+                    console.log(`Memproses batch ${batchIndex + 1}/${totalBatches} (${startIdx}-${endIdx-1})`);
+                    
+                    // Buat promises untuk semua operasi dalam batch ini
+                    const promises = currentBatch.map(candidate => {
+                        // Validasi data
+                        if (!candidate.nrp || !candidate.password) {
+                            console.error("Data tidak lengkap:", candidate);
+                            errorCount++;
+                            return Promise.resolve(); // Skip item ini
+                        }
+                        
+                        // Pastikan status valid
+                        if (candidate.status !== 'lulus' && candidate.status !== 'tidak') {
+                            candidate.status = 'tidak'; // Default ke tidak lulus jika status tidak valid
+                        }
+                        
+                        return candidatesRef.push(candidate)
+                            .then(() => {
+                                importCount++;
+                                console.log(`Imported ${importCount}/${window.parsedCsvData.length}`);
+                            })
+                            .catch(error => {
+                                console.error("Error saat mengimpor data:", error);
+                                errorCount++;
+                            });
+                    });
+                    
+                    // Setelah batch ini selesai, proses batch berikutnya
+                    Promise.all(promises)
                         .then(() => {
-                            importCount++;
-                            console.log(`Imported ${importCount}/${window.parsedCsvData.length}`);
-                            
-                            // Jika semua data sudah diimpor
-                            if (importCount + errorCount === window.parsedCsvData.length) {
-                                alert(`Import selesai. ${importCount} data berhasil diimpor, ${errorCount} data gagal.`);
-                                loadCandidates();
-                                document.getElementById('csvPreview').classList.add('hidden');
-                                document.getElementById('csvFileInput').value = '';
-                            }
+                            console.log(`Batch ${batchIndex + 1} selesai. Progress: ${importCount + errorCount}/${window.parsedCsvData.length}`);
+                            processBatch(batchIndex + 1);
                         })
                         .catch(error => {
-                            console.error("Error saat mengimpor data:", error);
-                            errorCount++;
-                            
-                            // Jika semua data sudah diproses
-                            if (importCount + errorCount === window.parsedCsvData.length) {
-                                alert(`Import selesai. ${importCount} data berhasil diimpor, ${errorCount} data gagal.`);
-                                loadCandidates();
-                                document.getElementById('csvPreview').classList.add('hidden');
-                                document.getElementById('csvFileInput').value = '';
-                            }
+                            console.error("Error dalam batch:", error);
+                            processBatch(batchIndex + 1); // Tetap lanjut ke batch berikutnya
                         });
-                });
+                }
+                
+                // Mulai dengan batch pertama
+                processBatch(0);
             });
             
             // Select all checkbox
@@ -1265,5 +1376,5 @@
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9624e72fc095ce3a',t:'MTc1MzA0MDE0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9624f1c7f486ce4a',t:'MTc1MzA0MDU3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
