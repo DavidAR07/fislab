@@ -92,6 +92,15 @@
             cursor: pointer;
             display: block;
         }
+        .shake-animation {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+            100% { transform: translateX(0); }
+        }
     </style>
 </head>
 <body class="flex items-center justify-center p-4" id="mainBody">
@@ -309,7 +318,7 @@
                                 </svg>
                                 Pilih File CSV
                             </button>
-                            <input type="file" id="csvFileInput" accept=".csv" />
+                            <input type="file" id="csvFileInput" accept=".csv,.txt" />
                         </div>
                         <button id="importCsvButton" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300">
                             Import
@@ -342,17 +351,28 @@
                     <div class="text-xs text-gray-400">
                         <p>Format CSV: nrp,password,nama,kode,status (lulus/tidak)</p>
                         <p>Contoh: 5001232001,hidupjokowi,Ahmad Fauzi,A1,lulus</p>
+                        <p>Pastikan file CSV menggunakan format UTF-8 dan pemisah koma (,)</p>
                     </div>
                 </div>
             </div>
             
-            <!-- Candidates List -->
-            <div class="bg-gray-900 rounded-lg p-6 border border-red-800">
-                <h3 class="text-xl font-bold text-white mb-4">Daftar Kandidat</h3>
+            <!-- Bulk Delete -->
+            <div class="bg-gray-900 rounded-lg p-6 mb-8 border border-red-800">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">Daftar Kandidat</h3>
+                    <div>
+                        <button id="deleteSelectedButton" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm hidden">
+                            Hapus Terpilih
+                        </button>
+                    </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full bg-gray-800 text-white rounded-lg overflow-hidden">
                         <thead class="bg-black bg-opacity-60">
                             <tr>
+                                <th class="py-3 px-2 text-center w-10">
+                                    <input type="checkbox" id="selectAllCheckbox" class="rounded bg-gray-700 border-gray-600 text-red-600 focus:ring-red-500">
+                                </th>
                                 <th class="py-3 px-4 text-left">NRP</th>
                                 <th class="py-3 px-4 text-left">Kata Sandi</th>
                                 <th class="py-3 px-4 text-left">Nama</th>
@@ -425,6 +445,26 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hayoo Modal -->
+    <div id="hayooModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 rounded-lg max-w-md w-full mx-4 overflow-hidden border border-red-800 red-glow shake-animation">
+            <div class="p-4 text-white text-center bg-red-900">
+                <div class="mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold">Hayoo.. mau ngapain??</h3>
+            </div>
+            <div class="p-6 bg-gray-900">
+                <p class="text-gray-300 mb-4 text-center">Kamu tidak memiliki akses untuk masuk ke halaman admin!</p>
+                <button id="closeHayooModal" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300">
+                    Kembali
+                </button>
             </div>
         </div>
     </div>
@@ -503,7 +543,7 @@
                 return;
             }
             
-            candidatesList.innerHTML = '<tr><td colspan="6" class="py-3 px-4 text-center">Memuat data...</td></tr>';
+            candidatesList.innerHTML = '<tr><td colspan="7" class="py-3 px-4 text-center">Memuat data...</td></tr>';
             
             database.ref('candidates').once('value')
                 .then(snapshot => {
@@ -511,9 +551,12 @@
                     candidatesList.innerHTML = '';
                     
                     if (!snapshot.exists()) {
-                        candidatesList.innerHTML = '<tr><td colspan="6" class="py-3 px-4 text-center">Tidak ada data kandidat</td></tr>';
+                        candidatesList.innerHTML = '<tr><td colspan="7" class="py-3 px-4 text-center">Tidak ada data kandidat</td></tr>';
                         return;
                     }
+                    
+                    // Reset selected count
+                    updateSelectedCount(0);
                     
                     snapshot.forEach(childSnapshot => {
                         const candidateId = childSnapshot.key;
@@ -524,6 +567,9 @@
                         row.className = candidate.status === 'lulus' ? 'border-b border-gray-700 bg-gray-800' : 'border-b border-gray-700';
                         
                         row.innerHTML = `
+                            <td class="py-3 px-2 text-center">
+                                <input type="checkbox" class="candidate-checkbox rounded bg-gray-700 border-gray-600 text-red-600 focus:ring-red-500" data-id="${candidateId}">
+                            </td>
                             <td class="py-3 px-4">${candidate.nrp}</td>
                             <td class="py-3 px-4">${candidate.password}</td>
                             <td class="py-3 px-4">${candidate.name || '-'}</td>
@@ -562,11 +608,41 @@
                             }
                         });
                     });
+                    
+                    // Add event listeners to checkboxes
+                    document.querySelectorAll('.candidate-checkbox').forEach(checkbox => {
+                        checkbox.addEventListener('change', updateSelectedButtonVisibility);
+                    });
                 })
                 .catch(error => {
                     console.error("Error saat memuat kandidat:", error);
-                    candidatesList.innerHTML = `<tr><td colspan="6" class="py-3 px-4 text-center text-red-500">Error: ${error.message}</td></tr>`;
+                    candidatesList.innerHTML = `<tr><td colspan="7" class="py-3 px-4 text-center text-red-500">Error: ${error.message}</td></tr>`;
                 });
+        }
+        
+        // Fungsi untuk menghitung jumlah checkbox yang dipilih dan memperbarui tombol hapus
+        function updateSelectedButtonVisibility() {
+            const checkboxes = document.querySelectorAll('.candidate-checkbox:checked');
+            const deleteSelectedButton = document.getElementById('deleteSelectedButton');
+            
+            if (checkboxes.length > 0) {
+                deleteSelectedButton.classList.remove('hidden');
+                deleteSelectedButton.textContent = `Hapus Terpilih (${checkboxes.length})`;
+            } else {
+                deleteSelectedButton.classList.add('hidden');
+            }
+        }
+        
+        // Fungsi untuk memperbarui jumlah yang dipilih
+        function updateSelectedCount(count) {
+            const deleteSelectedButton = document.getElementById('deleteSelectedButton');
+            
+            if (count > 0) {
+                deleteSelectedButton.classList.remove('hidden');
+                deleteSelectedButton.textContent = `Hapus Terpilih (${count})`;
+            } else {
+                deleteSelectedButton.classList.add('hidden');
+            }
         }
         
         // Fungsi untuk edit kandidat
@@ -668,22 +744,47 @@
             modal.classList.remove('hidden');
         }
         
-        // Fungsi untuk parsing CSV
+        // Fungsi untuk parsing CSV yang diperbaiki
         function parseCSV(text) {
+            // Bersihkan teks dari karakter non-printable dan header yang tidak perlu
+            text = text.replace(/^\s*[\r\n]/gm, ''); // Hapus baris kosong
+            
+            // Deteksi jika file dimulai dengan PK (file Excel/ZIP) dan berikan pesan error
+            if (text.startsWith('PK')) {
+                alert('File yang Anda unggah sepertinya bukan file CSV yang valid. Pastikan file dalam format CSV (text) dan bukan Excel (.xlsx).');
+                return [];
+            }
+            
+            // Coba deteksi pemisah (koma atau titik koma)
+            let separator = ',';
+            if (text.indexOf(';') > -1 && text.indexOf(',') === -1) {
+                separator = ';';
+            }
+            
             const lines = text.split('\n');
             const result = [];
             
             for (let i = 0; i < lines.length; i++) {
                 if (lines[i].trim() === '') continue;
                 
-                const values = lines[i].split(',');
+                // Jika baris dimulai dengan karakter aneh, lewati
+                if (lines[i].charCodeAt(0) < 32 || lines[i].charCodeAt(0) > 126) {
+                    continue;
+                }
+                
+                const values = lines[i].split(separator);
                 if (values.length >= 5) {
+                    // Bersihkan nilai dari karakter khusus dan quotes
+                    const cleanValues = values.map(val => {
+                        return val.trim().replace(/^["']|["']$/g, ''); // Hapus quotes di awal dan akhir
+                    });
+                    
                     result.push({
-                        nrp: values[0].trim(),
-                        password: values[1].trim(),
-                        name: values[2].trim(),
-                        code: values[3].trim(),
-                        status: values[4].trim().toLowerCase()
+                        nrp: cleanValues[0],
+                        password: cleanValues[1],
+                        name: cleanValues[2],
+                        code: cleanValues[3],
+                        status: cleanValues[4].toLowerCase()
                     });
                 }
             }
@@ -792,6 +893,11 @@
                 document.getElementById('resultModal').classList.add('hidden');
             });
             
+            // Close hayoo modal
+            document.getElementById('closeHayooModal').addEventListener('click', function() {
+                document.getElementById('hayooModal').classList.add('hidden');
+            });
+            
             // Admin button click
             const adminButton = document.getElementById('adminButton');
             if (adminButton) {
@@ -834,8 +940,16 @@
                         loadCandidates();
                     })
                     .catch(error => {
-                        loginError.textContent = "Login gagal: " + error.message;
-                        loginError.classList.remove('hidden');
+                        // Tampilkan modal "Hayoo"
+                        document.getElementById('adminLoginModal').classList.add('hidden');
+                        document.getElementById('hayooModal').classList.remove('hidden');
+                        
+                        // Tambahkan efek shake
+                        const hayooModal = document.getElementById('hayooModal').querySelector('.shake-animation');
+                        hayooModal.classList.remove('shake-animation');
+                        setTimeout(() => {
+                            hayooModal.classList.add('shake-animation');
+                        }, 10);
                     });
             });
             
@@ -943,6 +1057,11 @@
                     reader.onload = function(e) {
                         const csvData = parseCSV(e.target.result);
                         
+                        if (csvData.length === 0) {
+                            alert('Tidak ada data valid yang ditemukan dalam file. Pastikan format file sesuai.');
+                            return;
+                        }
+                        
                         // Show preview
                         const csvPreview = document.getElementById('csvPreview');
                         const csvPreviewBody = document.getElementById('csvPreviewBody');
@@ -954,11 +1073,11 @@
                                 const tr = document.createElement('tr');
                                 tr.className = 'border-b border-gray-700';
                                 tr.innerHTML = `
-                                    <td class="py-2 px-3">${row.nrp}</td>
-                                    <td class="py-2 px-3">${row.password}</td>
-                                    <td class="py-2 px-3">${row.name}</td>
-                                    <td class="py-2 px-3">${row.code}</td>
-                                    <td class="py-2 px-3">${row.status}</td>
+                                    <td class="py-2 px-3">${row.nrp || '-'}</td>
+                                    <td class="py-2 px-3">${row.password || '-'}</td>
+                                    <td class="py-2 px-3">${row.name || '-'}</td>
+                                    <td class="py-2 px-3">${row.code || '-'}</td>
+                                    <td class="py-2 px-3">${row.status || '-'}</td>
                                 `;
                                 csvPreviewBody.appendChild(tr);
                             }
@@ -987,6 +1106,11 @@
                 reader.onload = function(e) {
                     const csvData = parseCSV(e.target.result);
                     
+                    if (csvData.length === 0) {
+                        alert('Tidak ada data valid yang ditemukan dalam file. Pastikan format file sesuai.');
+                        return;
+                    }
+                    
                     // Show preview
                     const csvPreview = document.getElementById('csvPreview');
                     const csvPreviewBody = document.getElementById('csvPreviewBody');
@@ -998,11 +1122,11 @@
                             const tr = document.createElement('tr');
                             tr.className = 'border-b border-gray-700';
                             tr.innerHTML = `
-                                <td class="py-2 px-3">${row.nrp}</td>
-                                <td class="py-2 px-3">${row.password}</td>
-                                <td class="py-2 px-3">${row.name}</td>
-                                <td class="py-2 px-3">${row.code}</td>
-                                <td class="py-2 px-3">${row.status}</td>
+                                <td class="py-2 px-3">${row.nrp || '-'}</td>
+                                <td class="py-2 px-3">${row.password || '-'}</td>
+                                <td class="py-2 px-3">${row.name || '-'}</td>
+                                <td class="py-2 px-3">${row.code || '-'}</td>
+                                <td class="py-2 px-3">${row.status || '-'}</td>
                             `;
                             csvPreviewBody.appendChild(tr);
                         }
@@ -1081,6 +1205,53 @@
                 });
             });
             
+            // Select all checkbox
+            document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.candidate-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateSelectedButtonVisibility();
+            });
+            
+            // Delete selected button
+            document.getElementById('deleteSelectedButton').addEventListener('click', function() {
+                const selectedCheckboxes = document.querySelectorAll('.candidate-checkbox:checked');
+                
+                if (selectedCheckboxes.length === 0) {
+                    alert('Tidak ada kandidat yang dipilih');
+                    return;
+                }
+                
+                if (confirm(`Apakah Anda yakin ingin menghapus ${selectedCheckboxes.length} kandidat terpilih?`)) {
+                    let deleteCount = 0;
+                    let errorCount = 0;
+                    
+                    selectedCheckboxes.forEach(checkbox => {
+                        const candidateId = checkbox.getAttribute('data-id');
+                        
+                        database.ref('candidates/' + candidateId).remove()
+                            .then(() => {
+                                deleteCount++;
+                                
+                                if (deleteCount + errorCount === selectedCheckboxes.length) {
+                                    alert(`Berhasil menghapus ${deleteCount} kandidat, ${errorCount} gagal dihapus.`);
+                                    loadCandidates();
+                                }
+                            })
+                            .catch(error => {
+                                console.error("Error saat menghapus kandidat:", error);
+                                errorCount++;
+                                
+                                if (deleteCount + errorCount === selectedCheckboxes.length) {
+                                    alert(`Berhasil menghapus ${deleteCount} kandidat, ${errorCount} gagal dihapus.`);
+                                    loadCandidates();
+                                }
+                            });
+                    });
+                }
+            });
+            
             // Check if user is already logged in
             auth.onAuthStateChanged(user => {
                 if (user) {
@@ -1094,5 +1265,5 @@
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9624d73a6523ce4e',t:'MTc1MzAzOTQ4Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9624e72fc095ce3a',t:'MTc1MzA0MDE0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
