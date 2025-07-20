@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Kelulusan Calon Asisten Fisika Lab 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #111111 0%, #1a0000 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #f8f8f8;
+        }
+        .glass {
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 0, 0, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(255, 0, 0, 0.2);
+        }
+        .document-button {
+            background-color: #e11d48;
+            transition: all 0.3s ease;
+        }
+        .document-button:hover {
+            background-color: #be123c;
+            transform: translateY(-2px);
+        }
+        .warning-text {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        input {
+            background-color: rgba(30, 30, 30, 0.8) !important;
+            color: #f8f8f8 !important;
+            border-color: #4b4b4b !important;
+        }
+        input::placeholder {
+            color: #9ca3af !important;
+        }
+        input:focus {
+            border-color: #e11d48 !important;
+            box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.2) !important;
+        }
+        .red-glow {
+            box-shadow: 0 0 15px rgba(225, 29, 72, 0.5);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4" id="mainBody">
+    <div class="w-full max-w-md" id="mainContent">
+        <div class="glass rounded-xl overflow-hidden red-glow">
+            <!-- Header -->
+            <div class="bg-black bg-opacity-70 p-6 text-center border-b border-red-900">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 24 24'%3E%3Cpath fill='%23e11d48' d='M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72L5.18 9L12 5.28L18.82 9zM17 15.99l-5 2.73l-5-2.73v-3.72L12 15l5-2.73v3.72z'/%3E%3C/svg%3E" alt="Logo Laboratorium Fisika" class="mx-auto mb-2">
+                <h1 class="text-2xl font-bold text-white">Cek Kelulusan</h1>
+                <p class="text-gray-400">Calon Asisten Fisika Laboratorium 1</p>
+            </div>
+            
+            <!-- Form -->
+            <div class="p-6 bg-black bg-opacity-50">
+                <form id="checkForm" class="space-y-4">
+                    <div>
+                        <label for="nrp" class="block text-sm font-medium text-gray-300 mb-1">NRP</label>
+                        <input type="text" id="nrp" name="nrp" required 
+                            class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                            placeholder="Masukkan NRP Anda">
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Kata Sandi</label>
+                        <div class="relative">
+                            <input type="password" id="password" name="password" required
+                                class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                                placeholder="Masukkan kata sandi">
+                            <button type="button" id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" id="eyeIcon">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor" id="eyeSlashIcon">
+                                    <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
+                                    <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" 
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300 flex items-center justify-center">
+                        <span>Periksa Kelulusan</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Footer -->
+            <div class="bg-black bg-opacity-80 px-6 py-4 text-center text-sm text-gray-400">
+                <p>Fisika Laboratorium 1 2025</p>
+                <p>Departemen Fisika - Fakultas Sains dan Analitika Data</p>
+                <p>Institut Teknologi Sepuluh Nopember Surabaya</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Result Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 rounded-lg max-w-md w-full mx-4 overflow-hidden border border-red-800 red-glow">
+            <div id="modalHeader" class="p-4 text-white text-center">
+                <div id="statusIcon" class="mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full"></div>
+                <h3 id="resultTitle" class="text-xl font-bold"></h3>
+                <div id="codeContainer" class="mt-2 hidden">
+                    <span class="bg-black text-red-500 font-bold text-lg px-3 py-1 rounded-full border border-red-500">
+                        Kode: <span id="candidateCode"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-900">
+                <div id="resultDetails" class="text-gray-300 mb-4"></div>
+                
+                <!-- Warning message (only for successful candidates) -->
+                <div id="warningContainer" class="mb-4 hidden">
+                    <div class="bg-black border-l-4 border-red-600 p-3 rounded">
+                        <p class="text-red-500 font-bold warning-text">DILARANG KERAS MEMBAGIKAN DOKUMEN DIBAWAH INI KEPADA SIAPAPUN.</p>
+                    </div>
+                </div>
+                
+                <!-- Document button (hidden by default) -->
+                <div id="documentContainer" class="mb-4 hidden">
+                    <a id="documentLink" href="#" target="_blank" class="document-button w-full flex items-center justify-center text-white font-medium py-3 px-4 rounded-md shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                        </svg>
+                        Informasi Tahap Interview
+                    </a>
+                </div>
+                
+                <button id="closeModal" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial sample data
+        let defaultCandidates = [
+            { 
+                nrp: "5001232001", 
+                password: "hidupjokowi", 
+                status: "lulus", 
+                details: "Selamat! Anda dinyatakan LOLOS sebagai calon Asisten Fisika Laboratorium 1. Silahkan baca dokumen dibawah ini untuk informasi tahap selanjutnya.",
+                name: "Ahmad Fauzi",
+                code: "A1"
+            },
+            { 
+                nrp: "5001232002", 
+                password: "hidupjokowi", 
+                status: "tidak", 
+                details: "Mohon maaf, Anda dinyatakan TIDAK LULUS seleksi Asisten Fisika Laboratorium 1. Tetap semangat dan terima kasih atas partisipasinya."
+            },
+            { 
+                nrp: "5001232003", 
+                password: "hidupjokowi", 
+                status: "lulus", 
+                details: "Selamat! Anda dinyatakan LOLOS sebagai calon Asisten Fisika Laboratorium 1. Silahkan baca dokumen dibawah ini untuk informasi tahap selanjutnya.",
+                name: "Siti Nurhaliza",
+                code: "A3"
+            }
+        ];
+        
+        // Check if candidates exist in localStorage
+        let candidates = JSON.parse(localStorage.getItem('candidates')) || defaultCandidates;
+        
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle password visibility
+            document.getElementById('togglePassword').addEventListener('click', function() {
+                const passwordInput = document.getElementById('password');
+                const eyeIcon = document.getElementById('eyeIcon');
+                const eyeSlashIcon = document.getElementById('eyeSlashIcon');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    eyeIcon.classList.add('hidden');
+                    eyeSlashIcon.classList.remove('hidden');
+                } else {
+                    passwordInput.type = 'password';
+                    eyeIcon.classList.remove('hidden');
+                    eyeSlashIcon.classList.add('hidden');
+                }
+            });
+
+            // Form submission
+            document.getElementById('checkForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const nrp = document.getElementById('nrp').value;
+                const password = document.getElementById('password').value;
+                
+                // Find candidate
+                const candidate = candidates.find(c => c.nrp === nrp && c.password === password);
+                
+                const modal = document.getElementById('resultModal');
+                const modalHeader = document.getElementById('modalHeader');
+                const statusIcon = document.getElementById('statusIcon');
+                const resultTitle = document.getElementById('resultTitle');
+                const resultDetails = document.getElementById('resultDetails');
+                const documentContainer = document.getElementById('documentContainer');
+                const documentLink = document.getElementById('documentLink');
+                const codeContainer = document.getElementById('codeContainer');
+                const candidateCode = document.getElementById('candidateCode');
+                const warningContainer = document.getElementById('warningContainer');
+                
+                if (candidate) {
+                    if (candidate.status === "lulus") {
+                        modalHeader.className = "p-4 text-white text-center bg-red-900";
+                        statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
+                        statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
+                        resultTitle.textContent = "SELAMAT!";
+                        
+                        // Show document button for successful candidates
+                        documentContainer.classList.remove('hidden');
+                        documentLink.href = "https://drive.google.com/file/d/example/view"; // Replace with your actual PDF link
+                        
+                        // Show warning message
+                        warningContainer.classList.remove('hidden');
+                        
+                        // Show candidate code
+                        if (candidate.code) {
+                            codeContainer.classList.remove('hidden');
+                            candidateCode.textContent = candidate.code;
+                        } else {
+                            codeContainer.classList.add('hidden');
+                        }
+                    } else {
+                        modalHeader.className = "p-4 text-white text-center bg-gray-800";
+                        statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
+                        statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
+                        resultTitle.textContent = "MOHON MAAF";
+                        
+                        // Hide document button for unsuccessful candidates
+                        documentContainer.classList.add('hidden');
+                        
+                        // Hide warning message
+                        warningContainer.classList.add('hidden');
+                        
+                        // Hide code container
+                        codeContainer.classList.add('hidden');
+                    }
+                    resultDetails.textContent = candidate.details;
+                } else {
+                    modalHeader.className = "p-4 text-white text-center bg-yellow-900";
+                    statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
+                    statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>';
+                    resultTitle.textContent = "DATA TIDAK DITEMUKAN";
+                    resultDetails.textContent = "NRP atau kata sandi yang Anda masukkan tidak valid. Silakan periksa kembali dan coba lagi.";
+                    
+                    // Hide document button for not found
+                    documentContainer.classList.add('hidden');
+                    
+                    // Hide warning message
+                    warningContainer.classList.add('hidden');
+                    
+                    // Hide code container
+                    codeContainer.classList.add('hidden');
+                }
+                
+                modal.classList.remove('hidden');
+            });
+
+            // Close modal
+            document.getElementById('closeModal').addEventListener('click', function() {
+                document.getElementById('resultModal').classList.add('hidden');
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96244834b161fce2',t:'MTc1MzAzMzYyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
