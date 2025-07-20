@@ -74,6 +74,24 @@
             background-color: rgba(30, 30, 30, 0.9);
             color: #999;
         }
+        .csv-upload {
+            position: relative;
+            overflow: hidden;
+        }
+        .csv-upload input[type=file] {
+            position: absolute;
+            top: 0;
+            right: 0;
+            min-width: 100%;
+            min-height: 100%;
+            font-size: 100px;
+            text-align: right;
+            filter: alpha(opacity=0);
+            opacity: 0;
+            outline: none;
+            cursor: pointer;
+            display: block;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center p-4" id="mainBody">
@@ -235,47 +253,40 @@
                 <form id="addCandidateForm" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="newNrp" class="block text-sm font-medium text-gray-300 mb-1">NRP</label>
+                            <label for="newNrp" class="block text-sm font-medium text-gray-300 mb-1">NRP <span class="text-red-500">*</span></label>
                             <input type="text" id="newNrp" name="newNrp" required 
                                 class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                                 placeholder="NRP kandidat">
                         </div>
                         
                         <div>
-                            <label for="newPassword" class="block text-sm font-medium text-gray-300 mb-1">Kata Sandi</label>
+                            <label for="newPassword" class="block text-sm font-medium text-gray-300 mb-1">Kata Sandi <span class="text-red-500">*</span></label>
                             <input type="text" id="newPassword" name="newPassword" required
                                 class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                                 placeholder="Kata sandi kandidat">
                         </div>
                         
                         <div>
-                            <label for="newName" class="block text-sm font-medium text-gray-300 mb-1">Nama (opsional)</label>
-                            <input type="text" id="newName" name="newName"
+                            <label for="newName" class="block text-sm font-medium text-gray-300 mb-1">Nama <span class="text-red-500">*</span></label>
+                            <input type="text" id="newName" name="newName" required
                                 class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                                 placeholder="Nama kandidat">
                         </div>
                         
                         <div>
-                            <label for="newCode" class="block text-sm font-medium text-gray-300 mb-1">Kode (opsional)</label>
-                            <input type="text" id="newCode" name="newCode"
+                            <label for="newCode" class="block text-sm font-medium text-gray-300 mb-1">Kode <span class="text-red-500">*</span></label>
+                            <input type="text" id="newCode" name="newCode" required
                                 class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                                 placeholder="Kode kandidat">
                         </div>
                         
                         <div>
-                            <label for="newStatus" class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                            <label for="newStatus" class="block text-sm font-medium text-gray-300 mb-1">Status <span class="text-red-500">*</span></label>
                             <select id="newStatus" name="newStatus" required
                                 class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors bg-gray-800 text-white">
                                 <option value="lulus">Lulus</option>
                                 <option value="tidak">Tidak Lulus</option>
                             </select>
-                        </div>
-                        
-                        <div>
-                            <label for="newDetails" class="block text-sm font-medium text-gray-300 mb-1">Detail Pesan</label>
-                            <input type="text" id="newDetails" name="newDetails" required
-                                class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
-                                placeholder="Pesan untuk kandidat">
                         </div>
                     </div>
                     
@@ -284,6 +295,55 @@
                         Tambah Kandidat
                     </button>
                 </form>
+            </div>
+            
+            <!-- Import CSV -->
+            <div class="bg-gray-900 rounded-lg p-6 mb-8 border border-red-800">
+                <h3 class="text-xl font-bold text-white mb-4">Import Data dari CSV</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="csv-upload flex-1">
+                            <button class="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                                Pilih File CSV
+                            </button>
+                            <input type="file" id="csvFileInput" accept=".csv" />
+                        </div>
+                        <button id="importCsvButton" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300">
+                            Import
+                        </button>
+                    </div>
+                    <div id="csvPreview" class="hidden">
+                        <h4 class="text-white font-medium mb-2">Preview Data:</h4>
+                        <div class="bg-gray-800 p-3 rounded-md text-sm text-gray-300 max-h-40 overflow-y-auto">
+                            <table id="csvPreviewTable" class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-2 px-3 text-left">NRP</th>
+                                        <th class="py-2 px-3 text-left">Password</th>
+                                        <th class="py-2 px-3 text-left">Nama</th>
+                                        <th class="py-2 px-3 text-left">Kode</th>
+                                        <th class="py-2 px-3 text-left">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="csvPreviewBody">
+                                    <!-- CSV preview rows will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3 flex justify-end">
+                            <button id="confirmImportButton" class="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded-md transition-colors duration-300 text-sm">
+                                Konfirmasi Import
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        <p>Format CSV: nrp,password,nama,kode,status (lulus/tidak)</p>
+                        <p>Contoh: 5001232001,hidupjokowi,Ahmad Fauzi,A1,lulus</p>
+                    </div>
+                </div>
             </div>
             
             <!-- Candidates List -->
@@ -321,42 +381,36 @@
                     <input type="hidden" id="editCandidateId">
                     
                     <div>
-                        <label for="editNrp" class="block text-sm font-medium text-gray-300 mb-1">NRP</label>
+                        <label for="editNrp" class="block text-sm font-medium text-gray-300 mb-1">NRP <span class="text-red-500">*</span></label>
                         <input type="text" id="editNrp" name="editNrp" required 
                             class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors">
                     </div>
                     
                     <div>
-                        <label for="editPassword" class="block text-sm font-medium text-gray-300 mb-1">Kata Sandi</label>
+                        <label for="editPassword" class="block text-sm font-medium text-gray-300 mb-1">Kata Sandi <span class="text-red-500">*</span></label>
                         <input type="text" id="editPassword" name="editPassword" required
                             class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors">
                     </div>
                     
                     <div>
-                        <label for="editName" class="block text-sm font-medium text-gray-300 mb-1">Nama (opsional)</label>
-                        <input type="text" id="editName" name="editName"
+                        <label for="editName" class="block text-sm font-medium text-gray-300 mb-1">Nama <span class="text-red-500">*</span></label>
+                        <input type="text" id="editName" name="editName" required
                             class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors">
                     </div>
                     
                     <div>
-                        <label for="editCode" class="block text-sm font-medium text-gray-300 mb-1">Kode (opsional)</label>
-                        <input type="text" id="editCode" name="editCode"
+                        <label for="editCode" class="block text-sm font-medium text-gray-300 mb-1">Kode <span class="text-red-500">*</span></label>
+                        <input type="text" id="editCode" name="editCode" required
                             class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors">
                     </div>
                     
                     <div>
-                        <label for="editStatus" class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                        <label for="editStatus" class="block text-sm font-medium text-gray-300 mb-1">Status <span class="text-red-500">*</span></label>
                         <select id="editStatus" name="editStatus" required
                             class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors bg-gray-800 text-white">
                             <option value="lulus">Lulus</option>
                             <option value="tidak">Tidak Lulus</option>
                         </select>
-                    </div>
-                    
-                    <div>
-                        <label for="editDetails" class="block text-sm font-medium text-gray-300 mb-1">Detail Pesan</label>
-                        <input type="text" id="editDetails" name="editDetails" required
-                            class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors">
                     </div>
                     
                     <div class="flex space-x-3">
@@ -376,11 +430,11 @@
     </div>
 
     <script>
-        // Firebase configuration - DIPERBARUI dengan konfigurasi Anda
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyByHiJnziqntKdg9ErMxLORJ_1nRAktOj4",
             authDomain: "fislab12.firebaseapp.com",
-            databaseURL: "https://fislab12-default-rtdb.asia-southeast1.firebasedatabase.app", // Tambahkan ini
+            databaseURL: "https://fislab12-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "fislab12",
             storageBucket: "fislab12.appspot.com",
             messagingSenderId: "92616259041",
@@ -388,7 +442,7 @@
             measurementId: "G-EBKR0E6F88"
         };
         
-        // Initialize Firebase dengan Firebase SDK v8
+        // Initialize Firebase
         if (typeof firebase !== 'undefined') {
             firebase.initializeApp(firebaseConfig);
             console.log("Firebase initialized successfully");
@@ -409,13 +463,18 @@
         const database = firebase.database();
         const auth = firebase.auth();
         
+        // Pesan standar berdasarkan status
+        const standardMessages = {
+            lulus: "Selamat! Anda dinyatakan LOLOS sebagai calon Asisten Fisika Laboratorium 1. Silahkan baca dokumen dibawah ini untuk informasi tahap selanjutnya.",
+            tidak: "Mohon maaf, Anda dinyatakan TIDAK LULUS seleksi Asisten Fisika Laboratorium 1. Tetap semangat dan terima kasih atas partisipasinya."
+        };
+        
         // Initial sample data
         let defaultCandidates = [
             { 
                 nrp: "5001232001", 
                 password: "hidupjokowi", 
                 status: "lulus", 
-                details: "Selamat! Anda dinyatakan LOLOS sebagai calon Asisten Fisika Laboratorium 1. Silahkan baca dokumen dibawah ini untuk informasi tahap selanjutnya.",
                 name: "Ahmad Fauzi",
                 code: "A1"
             },
@@ -423,13 +482,13 @@
                 nrp: "5001232002", 
                 password: "hidupjokowi", 
                 status: "tidak", 
-                details: "Mohon maaf, Anda dinyatakan TIDAK LULUS seleksi Asisten Fisika Laboratorium 1. Tetap semangat dan terima kasih atas partisipasinya."
+                name: "Budi Santoso",
+                code: "A2"
             },
             { 
                 nrp: "5001232003", 
                 password: "hidupjokowi", 
                 status: "lulus", 
-                details: "Selamat! Anda dinyatakan LOLOS sebagai calon Asisten Fisika Laboratorium 1. Silahkan baca dokumen dibawah ini untuk informasi tahap selanjutnya.",
                 name: "Siti Nurhaliza",
                 code: "A3"
             }
@@ -521,7 +580,6 @@
                 document.getElementById('editName').value = candidate.name || '';
                 document.getElementById('editCode').value = candidate.code || '';
                 document.getElementById('editStatus').value = candidate.status;
-                document.getElementById('editDetails').value = candidate.details;
                 
                 document.getElementById('editCandidateModal').classList.remove('hidden');
             });
@@ -558,6 +616,7 @@
                     statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
                     statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
                     resultTitle.textContent = "SELAMAT!";
+                    resultDetails.textContent = standardMessages.lulus;
                     
                     // Show document button for successful candidates
                     documentContainer.classList.remove('hidden');
@@ -578,6 +637,7 @@
                     statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
                     statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
                     resultTitle.textContent = "MOHON MAAF";
+                    resultDetails.textContent = standardMessages.tidak;
                     
                     // Hide document button for unsuccessful candidates
                     documentContainer.classList.add('hidden');
@@ -588,7 +648,6 @@
                     // Hide code container
                     codeContainer.classList.add('hidden');
                 }
-                resultDetails.textContent = candidate.details;
             } else {
                 modalHeader.className = "p-4 text-white text-center bg-yellow-900";
                 statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
@@ -609,6 +668,29 @@
             modal.classList.remove('hidden');
         }
         
+        // Fungsi untuk parsing CSV
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            const result = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                const values = lines[i].split(',');
+                if (values.length >= 5) {
+                    result.push({
+                        nrp: values[0].trim(),
+                        password: values[1].trim(),
+                        name: values[2].trim(),
+                        code: values[3].trim(),
+                        status: values[4].trim().toLowerCase()
+                    });
+                }
+            }
+            
+            return result;
+        }
+        
         // Check if data exists in Firebase, if not, initialize with default data
         function initializeData() {
             console.log("Memeriksa data di Firebase...");
@@ -617,7 +699,12 @@
                     console.log("Data tidak ditemukan, menginisialisasi dengan data default");
                     // If no data exists, initialize with default data
                     defaultCandidates.forEach((candidate, index) => {
-                        database.ref('candidates/' + index).set(candidate)
+                        // Tambahkan pesan standar berdasarkan status
+                        const candidateWithDetails = {
+                            ...candidate
+                        };
+                        
+                        database.ref('candidates/' + index).set(candidateWithDetails)
                             .then(() => console.log("Data default berhasil ditambahkan:", candidate.nrp))
                             .catch(error => console.error("Error saat menambahkan data default:", error));
                     });
@@ -653,7 +740,7 @@
                 }
             });
 
-            // Form submission - DIPERBAIKI
+            // Form submission
             const checkForm = document.getElementById('checkForm');
             if (checkForm) {
                 console.log("Form periksa kelulusan ditemukan");
@@ -759,7 +846,7 @@
                 });
             });
             
-            // Add candidate form - DIPERBAIKI
+            // Add candidate form
             const addCandidateForm = document.getElementById('addCandidateForm');
             if (addCandidateForm) {
                 console.log("Form tambah kandidat ditemukan");
@@ -778,10 +865,9 @@
                     const newCandidate = {
                         nrp: document.getElementById('newNrp').value,
                         password: document.getElementById('newPassword').value,
-                        name: document.getElementById('newName').value || "",
-                        code: document.getElementById('newCode').value || "",
-                        status: document.getElementById('newStatus').value,
-                        details: document.getElementById('newDetails').value
+                        name: document.getElementById('newName').value,
+                        code: document.getElementById('newCode').value,
+                        status: document.getElementById('newStatus').value
                     };
                     
                     console.log("Data kandidat baru:", newCandidate);
@@ -828,10 +914,9 @@
                 const updatedCandidate = {
                     nrp: document.getElementById('editNrp').value,
                     password: document.getElementById('editPassword').value,
-                    name: document.getElementById('editName').value || "",
-                    code: document.getElementById('editCode').value || "",
-                    status: document.getElementById('editStatus').value,
-                    details: document.getElementById('editDetails').value
+                    name: document.getElementById('editName').value,
+                    code: document.getElementById('editCode').value,
+                    status: document.getElementById('editStatus').value
                 };
                 
                 // Update in Firebase
@@ -850,6 +935,152 @@
                     });
             });
             
+            // CSV file input change
+            document.getElementById('csvFileInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const csvData = parseCSV(e.target.result);
+                        
+                        // Show preview
+                        const csvPreview = document.getElementById('csvPreview');
+                        const csvPreviewBody = document.getElementById('csvPreviewBody');
+                        
+                        csvPreviewBody.innerHTML = '';
+                        
+                        csvData.forEach((row, index) => {
+                            if (index < 5) { // Show only first 5 rows in preview
+                                const tr = document.createElement('tr');
+                                tr.className = 'border-b border-gray-700';
+                                tr.innerHTML = `
+                                    <td class="py-2 px-3">${row.nrp}</td>
+                                    <td class="py-2 px-3">${row.password}</td>
+                                    <td class="py-2 px-3">${row.name}</td>
+                                    <td class="py-2 px-3">${row.code}</td>
+                                    <td class="py-2 px-3">${row.status}</td>
+                                `;
+                                csvPreviewBody.appendChild(tr);
+                            }
+                        });
+                        
+                        csvPreview.classList.remove('hidden');
+                        
+                        // Store the parsed data for later use
+                        window.parsedCsvData = csvData;
+                    };
+                    reader.readAsText(file);
+                }
+            });
+            
+            // Import CSV button
+            document.getElementById('importCsvButton').addEventListener('click', function() {
+                const fileInput = document.getElementById('csvFileInput');
+                if (fileInput.files.length === 0) {
+                    alert('Silakan pilih file CSV terlebih dahulu');
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const csvData = parseCSV(e.target.result);
+                    
+                    // Show preview
+                    const csvPreview = document.getElementById('csvPreview');
+                    const csvPreviewBody = document.getElementById('csvPreviewBody');
+                    
+                    csvPreviewBody.innerHTML = '';
+                    
+                    csvData.forEach((row, index) => {
+                        if (index < 5) { // Show only first 5 rows in preview
+                            const tr = document.createElement('tr');
+                            tr.className = 'border-b border-gray-700';
+                            tr.innerHTML = `
+                                <td class="py-2 px-3">${row.nrp}</td>
+                                <td class="py-2 px-3">${row.password}</td>
+                                <td class="py-2 px-3">${row.name}</td>
+                                <td class="py-2 px-3">${row.code}</td>
+                                <td class="py-2 px-3">${row.status}</td>
+                            `;
+                            csvPreviewBody.appendChild(tr);
+                        }
+                    });
+                    
+                    csvPreview.classList.remove('hidden');
+                    
+                    // Store the parsed data for later use
+                    window.parsedCsvData = csvData;
+                };
+                
+                reader.readAsText(file);
+            });
+            
+            // Confirm import button
+            document.getElementById('confirmImportButton').addEventListener('click', function() {
+                if (!window.parsedCsvData || window.parsedCsvData.length === 0) {
+                    alert('Tidak ada data yang diimpor');
+                    return;
+                }
+                
+                // Periksa login admin
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    console.error("Admin tidak login");
+                    alert("Anda harus login sebagai admin untuk mengimpor data");
+                    return;
+                }
+                
+                const candidatesRef = firebase.database().ref('candidates');
+                let importCount = 0;
+                let errorCount = 0;
+                
+                // Tampilkan loading message
+                alert(`Memulai import ${window.parsedCsvData.length} data...`);
+                
+                // Import data satu per satu
+                window.parsedCsvData.forEach((candidate, index) => {
+                    // Validasi data
+                    if (!candidate.nrp || !candidate.password || !candidate.name || !candidate.code || !candidate.status) {
+                        console.error("Data tidak lengkap:", candidate);
+                        errorCount++;
+                        return;
+                    }
+                    
+                    // Pastikan status valid
+                    if (candidate.status !== 'lulus' && candidate.status !== 'tidak') {
+                        candidate.status = 'tidak'; // Default ke tidak lulus jika status tidak valid
+                    }
+                    
+                    candidatesRef.push(candidate)
+                        .then(() => {
+                            importCount++;
+                            console.log(`Imported ${importCount}/${window.parsedCsvData.length}`);
+                            
+                            // Jika semua data sudah diimpor
+                            if (importCount + errorCount === window.parsedCsvData.length) {
+                                alert(`Import selesai. ${importCount} data berhasil diimpor, ${errorCount} data gagal.`);
+                                loadCandidates();
+                                document.getElementById('csvPreview').classList.add('hidden');
+                                document.getElementById('csvFileInput').value = '';
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error saat mengimpor data:", error);
+                            errorCount++;
+                            
+                            // Jika semua data sudah diproses
+                            if (importCount + errorCount === window.parsedCsvData.length) {
+                                alert(`Import selesai. ${importCount} data berhasil diimpor, ${errorCount} data gagal.`);
+                                loadCandidates();
+                                document.getElementById('csvPreview').classList.add('hidden');
+                                document.getElementById('csvFileInput').value = '';
+                            }
+                        });
+                });
+            });
+            
             // Check if user is already logged in
             auth.onAuthStateChanged(user => {
                 if (user) {
@@ -863,5 +1094,5 @@
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9624c73d8383fce0',t:'MTc1MzAzODgzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9624d73a6523ce4e',t:'MTc1MzAzOTQ4Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
