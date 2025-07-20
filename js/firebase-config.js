@@ -11,17 +11,33 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Initialize Firebase services
+const app = firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const auth = firebase.auth();
 
-// Check database connection
-database.ref('.info/connected').on('value', function(snap) {
-    if (snap.val() === true) {
-        console.log("✅ Terhubung ke Firebase Database");
-    } else {
-        console.error("❌ Terputus dari Firebase Database");
+// Check connection
+const checkConnection = () => {
+    const connectedRef = database.ref('.info/connected');
+    connectedRef.on('value', (snap) => {
+        if (snap.val() === true) {
+            console.log("✅ Connected to Firebase Database");
+        } else {
+            console.log("❌ Disconnected from Firebase Database");
+            // Try to reconnect
+            setTimeout(checkConnection, 2000);
+        }
+    });
+};
+
+checkConnection();
+
+// Export with error handling
+try {
+    if (!app || !database || !auth) {
+        throw new Error("Firebase initialization failed");
     }
-});
+    console.log("Firebase initialized successfully");
+} catch (error) {
+    console.error("Firebase initialization error:", error);
+    alert("Error initializing Firebase. Please check console.");
+}
