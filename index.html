@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cek Kelulusan Calon Asisten Fisika Lab 1</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- Firebase SDK yang sudah diperbaiki -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #111111 0%, #1a0000 100%);
@@ -67,6 +67,7 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
+            z-index: 999;
         }
         .admin-button:hover {
             background-color: rgba(30, 30, 30, 0.9);
@@ -385,8 +386,15 @@
 };
         
         // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+        if (typeof firebase !== 'undefined') {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase initialized successfully");
+        } else {
+            console.error("Firebase SDK not loaded");
+        }
+        
+        const database = firebase.database();
+        const auth = firebase.auth();
         
         // Initial sample data
         let defaultCandidates = [
@@ -428,6 +436,8 @@ const analytics = getAnalytics(app);
         
         // Event Listeners
         document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM fully loaded");
+            
             // Initialize Firebase data
             initializeData();
             
@@ -549,9 +559,21 @@ const analytics = getAnalytics(app);
             });
             
             // Admin button click
-            document.getElementById('adminButton').addEventListener('click', function() {
-                document.getElementById('adminLoginModal').classList.remove('hidden');
-            });
+            const adminButton = document.getElementById('adminButton');
+            if (adminButton) {
+                console.log("Admin button found");
+                adminButton.addEventListener('click', function() {
+                    console.log('Admin button clicked');
+                    const adminLoginModal = document.getElementById('adminLoginModal');
+                    if (adminLoginModal) {
+                        adminLoginModal.classList.remove('hidden');
+                    } else {
+                        console.error('Admin login modal not found');
+                    }
+                });
+            } else {
+                console.error('Admin button not found');
+            }
             
             // Cancel admin login
             document.getElementById('cancelAdminLogin').addEventListener('click', function() {
@@ -749,5 +771,5 @@ const analytics = getAnalytics(app);
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96247b0d3725ff7f',t:'MTc1MzAzNTcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9624abbed7cdfe00',t:'MTc1MzAzNzcwNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
