@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cek Kelulusan Calon Asisten Fisika Lab 1</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK yang sudah diperbaiki -->
+    <!-- Firebase SDK v8 yang kompatibel dengan kode Anda -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <style>
+        /* CSS tetap sama seperti sebelumnya */
         body {
             background: linear-gradient(135deg, #111111 0%, #1a0000 100%);
             min-height: 100vh;
@@ -76,6 +77,7 @@
     </style>
 </head>
 <body class="flex items-center justify-center p-4" id="mainBody">
+    <!-- HTML tetap sama seperti sebelumnya -->
     <div class="w-full max-w-md" id="mainContent">
         <div class="glass rounded-xl overflow-hidden red-glow">
             <!-- Header -->
@@ -374,25 +376,36 @@
     </div>
 
     <script>
-        // Firebase configuration
+        // Firebase configuration - DIPERBARUI dengan konfigurasi Anda
         const firebaseConfig = {
-  apiKey: "AIzaSyByHiJnziqntKdg9ErMxLORJ_1nRAktOj4",
-  authDomain: "fislab12.firebaseapp.com",
-  projectId: "fislab12",
-  storageBucket: "fislab12.firebasestorage.app",
-  messagingSenderId: "92616259041",
-  appId: "1:92616259041:web:eb6646e4a539d46b980ea0",
-  measurementId: "G-EBKR0E6F88"
-};
+            apiKey: "AIzaSyByHiJnziqntKdg9ErMxLORJ_1nRAktOj4",
+            authDomain: "fislab12.firebaseapp.com",
+            databaseURL: "https://fislab12-default-rtdb.asia-southeast1.firebasedatabase.app", // Tambahkan ini
+            projectId: "fislab12",
+            storageBucket: "fislab12.appspot.com",
+            messagingSenderId: "92616259041",
+            appId: "1:92616259041:web:eb6646e4a539d46b980ea0",
+            measurementId: "G-EBKR0E6F88"
+        };
         
-        // Initialize Firebase
+        // Initialize Firebase dengan Firebase SDK v8
         if (typeof firebase !== 'undefined') {
             firebase.initializeApp(firebaseConfig);
             console.log("Firebase initialized successfully");
+            
+            // Periksa koneksi database
+            firebase.database().ref('.info/connected').on('value', function(snap) {
+                if (snap.val() === true) {
+                    console.log("✅ Terhubung ke Firebase Database");
+                } else {
+                    console.error("❌ Terputus dari Firebase Database");
+                }
+            });
         } else {
             console.error("Firebase SDK not loaded");
         }
         
+        // Definisikan variabel global
         const database = firebase.database();
         const auth = firebase.auth();
         
@@ -422,15 +435,197 @@
             }
         ];
         
+        // Definisikan fungsi loadCandidates secara global
+        function loadCandidates() {
+            console.log("Memuat daftar kandidat...");
+            const candidatesList = document.getElementById('candidatesList');
+            if (!candidatesList) {
+                console.error("Element candidatesList tidak ditemukan");
+                return;
+            }
+            
+            candidatesList.innerHTML = '<tr><td colspan="6" class="py-3 px-4 text-center">Memuat data...</td></tr>';
+            
+            database.ref('candidates').once('value')
+                .then(snapshot => {
+                    console.log("Data kandidat diterima:", snapshot.exists());
+                    candidatesList.innerHTML = '';
+                    
+                    if (!snapshot.exists()) {
+                        candidatesList.innerHTML = '<tr><td colspan="6" class="py-3 px-4 text-center">Tidak ada data kandidat</td></tr>';
+                        return;
+                    }
+                    
+                    snapshot.forEach(childSnapshot => {
+                        const candidateId = childSnapshot.key;
+                        const candidate = childSnapshot.val();
+                        console.log("Menampilkan kandidat:", candidate.nrp);
+                        
+                        const row = document.createElement('tr');
+                        row.className = candidate.status === 'lulus' ? 'border-b border-gray-700 bg-gray-800' : 'border-b border-gray-700';
+                        
+                        row.innerHTML = `
+                            <td class="py-3 px-4">${candidate.nrp}</td>
+                            <td class="py-3 px-4">${candidate.password}</td>
+                            <td class="py-3 px-4">${candidate.name || '-'}</td>
+                            <td class="py-3 px-4">${candidate.code || '-'}</td>
+                            <td class="py-3 px-4">
+                                <span class="px-2 py-1 rounded-full text-xs ${candidate.status === 'lulus' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}">
+                                    ${candidate.status === 'lulus' ? 'Lulus' : 'Tidak Lulus'}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <button class="edit-button bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded mr-1" data-id="${candidateId}">
+                                    Edit
+                                </button>
+                                <button class="delete-button bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded" data-id="${candidateId}">
+                                    Hapus
+                                </button>
+                            </td>
+                        `;
+                        
+                        candidatesList.appendChild(row);
+                    });
+                    
+                    // Add event listeners to edit and delete buttons
+                    document.querySelectorAll('.edit-button').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const candidateId = this.getAttribute('data-id');
+                            editCandidate(candidateId);
+                        });
+                    });
+                    
+                    document.querySelectorAll('.delete-button').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const candidateId = this.getAttribute('data-id');
+                            if (confirm('Apakah Anda yakin ingin menghapus kandidat ini?')) {
+                                deleteCandidate(candidateId);
+                            }
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error("Error saat memuat kandidat:", error);
+                    candidatesList.innerHTML = `<tr><td colspan="6" class="py-3 px-4 text-center text-red-500">Error: ${error.message}</td></tr>`;
+                });
+        }
+        
+        // Fungsi untuk edit kandidat
+        function editCandidate(candidateId) {
+            database.ref('candidates/' + candidateId).once('value', snapshot => {
+                const candidate = snapshot.val();
+                
+                document.getElementById('editCandidateId').value = candidateId;
+                document.getElementById('editNrp').value = candidate.nrp;
+                document.getElementById('editPassword').value = candidate.password;
+                document.getElementById('editName').value = candidate.name || '';
+                document.getElementById('editCode').value = candidate.code || '';
+                document.getElementById('editStatus').value = candidate.status;
+                document.getElementById('editDetails').value = candidate.details;
+                
+                document.getElementById('editCandidateModal').classList.remove('hidden');
+            });
+        }
+        
+        // Fungsi untuk hapus kandidat
+        function deleteCandidate(candidateId) {
+            database.ref('candidates/' + candidateId).remove()
+                .then(() => {
+                    loadCandidates();
+                    alert('Kandidat berhasil dihapus!');
+                })
+                .catch(error => {
+                    alert('Error: ' + error.message);
+                });
+        }
+        
+        // Fungsi untuk menampilkan hasil modal
+        function showResultModal(found, candidate) {
+            const modal = document.getElementById('resultModal');
+            const modalHeader = document.getElementById('modalHeader');
+            const statusIcon = document.getElementById('statusIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultDetails = document.getElementById('resultDetails');
+            const documentContainer = document.getElementById('documentContainer');
+            const documentLink = document.getElementById('documentLink');
+            const codeContainer = document.getElementById('codeContainer');
+            const candidateCode = document.getElementById('candidateCode');
+            const warningContainer = document.getElementById('warningContainer');
+            
+            if (found && candidate) {
+                if (candidate.status === "lulus") {
+                    modalHeader.className = "p-4 text-white text-center bg-red-900";
+                    statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
+                    statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
+                    resultTitle.textContent = "SELAMAT!";
+                    
+                    // Show document button for successful candidates
+                    documentContainer.classList.remove('hidden');
+                    documentLink.href = "https://drive.google.com/file/d/example/view"; // Replace with your actual PDF link
+                    
+                    // Show warning message
+                    warningContainer.classList.remove('hidden');
+                    
+                    // Show candidate code
+                    if (candidate.code) {
+                        codeContainer.classList.remove('hidden');
+                        candidateCode.textContent = candidate.code;
+                    } else {
+                        codeContainer.classList.add('hidden');
+                    }
+                } else {
+                    modalHeader.className = "p-4 text-white text-center bg-gray-800";
+                    statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
+                    statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
+                    resultTitle.textContent = "MOHON MAAF";
+                    
+                    // Hide document button for unsuccessful candidates
+                    documentContainer.classList.add('hidden');
+                    
+                    // Hide warning message
+                    warningContainer.classList.add('hidden');
+                    
+                    // Hide code container
+                    codeContainer.classList.add('hidden');
+                }
+                resultDetails.textContent = candidate.details;
+            } else {
+                modalHeader.className = "p-4 text-white text-center bg-yellow-900";
+                statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
+                statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>';
+                resultTitle.textContent = "DATA TIDAK DITEMUKAN";
+                resultDetails.textContent = "NRP atau kata sandi yang Anda masukkan tidak valid. Silakan periksa kembali dan coba lagi.";
+                
+                // Hide document button for not found
+                documentContainer.classList.add('hidden');
+                
+                // Hide warning message
+                warningContainer.classList.add('hidden');
+                
+                // Hide code container
+                codeContainer.classList.add('hidden');
+            }
+            
+            modal.classList.remove('hidden');
+        }
+        
         // Check if data exists in Firebase, if not, initialize with default data
         function initializeData() {
+            console.log("Memeriksa data di Firebase...");
             database.ref('candidates').once('value', snapshot => {
                 if (!snapshot.exists()) {
+                    console.log("Data tidak ditemukan, menginisialisasi dengan data default");
                     // If no data exists, initialize with default data
                     defaultCandidates.forEach((candidate, index) => {
-                        database.ref('candidates/' + index).set(candidate);
+                        database.ref('candidates/' + index).set(candidate)
+                            .then(() => console.log("Data default berhasil ditambahkan:", candidate.nrp))
+                            .catch(error => console.error("Error saat menambahkan data default:", error));
                     });
+                } else {
+                    console.log("Data sudah ada di Firebase");
                 }
+            }).catch(error => {
+                console.error("Error saat memeriksa data:", error);
             });
         }
         
@@ -458,99 +653,51 @@
                 }
             });
 
-            // Form submission
-            document.getElementById('checkForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const nrp = document.getElementById('nrp').value;
-                const password = document.getElementById('password').value;
-                
-                // Find candidate in Firebase
-                database.ref('candidates').once('value', snapshot => {
-                    let found = false;
-                    let candidate = null;
+            // Form submission - DIPERBAIKI
+            const checkForm = document.getElementById('checkForm');
+            if (checkForm) {
+                console.log("Form periksa kelulusan ditemukan");
+                checkForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log("Form periksa kelulusan disubmit");
                     
-                    snapshot.forEach(childSnapshot => {
-                        const data = childSnapshot.val();
-                        if (data.nrp === nrp && data.password === password) {
-                            found = true;
-                            candidate = data;
-                            return true; // Break the forEach loop
-                        }
-                    });
+                    const nrp = document.getElementById('nrp').value;
+                    const password = document.getElementById('password').value;
+                    console.log("Memeriksa NRP:", nrp);
                     
-                    showResultModal(found, candidate);
-                });
-            });
-
-            // Show result modal
-            function showResultModal(found, candidate) {
-                const modal = document.getElementById('resultModal');
-                const modalHeader = document.getElementById('modalHeader');
-                const statusIcon = document.getElementById('statusIcon');
-                const resultTitle = document.getElementById('resultTitle');
-                const resultDetails = document.getElementById('resultDetails');
-                const documentContainer = document.getElementById('documentContainer');
-                const documentLink = document.getElementById('documentLink');
-                const codeContainer = document.getElementById('codeContainer');
-                const candidateCode = document.getElementById('candidateCode');
-                const warningContainer = document.getElementById('warningContainer');
-                
-                if (found && candidate) {
-                    if (candidate.status === "lulus") {
-                        modalHeader.className = "p-4 text-white text-center bg-red-900";
-                        statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
-                        statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
-                        resultTitle.textContent = "SELAMAT!";
-                        
-                        // Show document button for successful candidates
-                        documentContainer.classList.remove('hidden');
-                        documentLink.href = "https://drive.google.com/file/d/example/view"; // Replace with your actual PDF link
-                        
-                        // Show warning message
-                        warningContainer.classList.remove('hidden');
-                        
-                        // Show candidate code
-                        if (candidate.code) {
-                            codeContainer.classList.remove('hidden');
-                            candidateCode.textContent = candidate.code;
-                        } else {
-                            codeContainer.classList.add('hidden');
-                        }
-                    } else {
-                        modalHeader.className = "p-4 text-white text-center bg-gray-800";
-                        statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
-                        statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
-                        resultTitle.textContent = "MOHON MAAF";
-                        
-                        // Hide document button for unsuccessful candidates
-                        documentContainer.classList.add('hidden');
-                        
-                        // Hide warning message
-                        warningContainer.classList.add('hidden');
-                        
-                        // Hide code container
-                        codeContainer.classList.add('hidden');
+                    // Coba akses database langsung
+                    try {
+                        console.log("Mengakses database...");
+                        database.ref('candidates').once('value')
+                            .then(snapshot => {
+                                console.log("Data diterima:", snapshot.exists());
+                                let found = false;
+                                let candidate = null;
+                                
+                                snapshot.forEach(childSnapshot => {
+                                    const data = childSnapshot.val();
+                                    console.log("Memeriksa data:", data.nrp);
+                                    if (data.nrp === nrp && data.password === password) {
+                                        found = true;
+                                        candidate = data;
+                                        console.log("Kandidat ditemukan:", data);
+                                        return true; // Break the forEach loop
+                                    }
+                                });
+                                
+                                showResultModal(found, candidate);
+                            })
+                            .catch(error => {
+                                console.error("Error saat mengakses database:", error);
+                                alert("Terjadi kesalahan: " + error.message);
+                            });
+                    } catch (error) {
+                        console.error("Exception:", error);
+                        alert("Terjadi kesalahan: " + error.message);
                     }
-                    resultDetails.textContent = candidate.details;
-                } else {
-                    modalHeader.className = "p-4 text-white text-center bg-yellow-900";
-                    statusIcon.className = "mx-auto mb-2 w-16 h-16 flex items-center justify-center rounded-full bg-black";
-                    statusIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>';
-                    resultTitle.textContent = "DATA TIDAK DITEMUKAN";
-                    resultDetails.textContent = "NRP atau kata sandi yang Anda masukkan tidak valid. Silakan periksa kembali dan coba lagi.";
-                    
-                    // Hide document button for not found
-                    documentContainer.classList.add('hidden');
-                    
-                    // Hide warning message
-                    warningContainer.classList.add('hidden');
-                    
-                    // Hide code container
-                    codeContainer.classList.add('hidden');
-                }
-                
-                modal.classList.remove('hidden');
+                });
+            } else {
+                console.error("Form periksa kelulusan tidak ditemukan");
             }
 
             // Close modal
@@ -612,35 +759,61 @@
                 });
             });
             
-            // Add candidate form
-            document.getElementById('addCandidateForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const newCandidate = {
-                    nrp: document.getElementById('newNrp').value,
-                    password: document.getElementById('newPassword').value,
-                    name: document.getElementById('newName').value || "",
-                    code: document.getElementById('newCode').value || "",
-                    status: document.getElementById('newStatus').value,
-                    details: document.getElementById('newDetails').value
-                };
-                
-                // Add to Firebase
-                const newCandidateRef = database.ref('candidates').push();
-                newCandidateRef.set(newCandidate)
-                    .then(() => {
-                        // Reset form
-                        document.getElementById('addCandidateForm').reset();
-                        
-                        // Reload candidates
-                        loadCandidates();
-                        
-                        alert('Kandidat berhasil ditambahkan!');
-                    })
-                    .catch(error => {
+            // Add candidate form - DIPERBAIKI
+            const addCandidateForm = document.getElementById('addCandidateForm');
+            if (addCandidateForm) {
+                console.log("Form tambah kandidat ditemukan");
+                addCandidateForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log("Form tambah kandidat disubmit");
+                    
+                    // Periksa login admin
+                    const user = firebase.auth().currentUser;
+                    if (!user) {
+                        console.error("Admin tidak login");
+                        alert("Anda harus login sebagai admin untuk menambahkan kandidat");
+                        return;
+                    }
+                    
+                    const newCandidate = {
+                        nrp: document.getElementById('newNrp').value,
+                        password: document.getElementById('newPassword').value,
+                        name: document.getElementById('newName').value || "",
+                        code: document.getElementById('newCode').value || "",
+                        status: document.getElementById('newStatus').value,
+                        details: document.getElementById('newDetails').value
+                    };
+                    
+                    console.log("Data kandidat baru:", newCandidate);
+                    
+                    // Tambahkan ke Firebase dengan metode alternatif
+                    try {
+                        console.log("Menambahkan kandidat ke database...");
+                        const candidatesRef = firebase.database().ref('candidates');
+                        candidatesRef.push(newCandidate)
+                            .then(() => {
+                                console.log("✅ Kandidat berhasil ditambahkan");
+                                document.getElementById('addCandidateForm').reset();
+                                alert('Kandidat berhasil ditambahkan!');
+                                
+                                // Reload candidates dengan timeout
+                                setTimeout(function() {
+                                    console.log("Memuat ulang daftar kandidat");
+                                    loadCandidates();
+                                }, 1000);
+                            })
+                            .catch(error => {
+                                console.error("❌ Error saat menambahkan kandidat:", error);
+                                alert('Error: ' + error.message);
+                            });
+                    } catch (error) {
+                        console.error("❌ Exception saat menambahkan kandidat:", error);
                         alert('Error: ' + error.message);
-                    });
-            });
+                    }
+                });
+            } else {
+                console.error("Form tambah kandidat tidak ditemukan");
+            }
             
             // Cancel edit
             document.getElementById('cancelEdit').addEventListener('click', function() {
@@ -677,99 +850,18 @@
                     });
             });
             
-            // Load candidates
-            function loadCandidates() {
-                const candidatesList = document.getElementById('candidatesList');
-                candidatesList.innerHTML = '';
-                
-                database.ref('candidates').once('value', snapshot => {
-                    snapshot.forEach(childSnapshot => {
-                        const candidateId = childSnapshot.key;
-                        const candidate = childSnapshot.val();
-                        
-                        const row = document.createElement('tr');
-                        row.className = candidate.status === 'lulus' ? 'border-b border-gray-700 bg-gray-800' : 'border-b border-gray-700';
-                        
-                        row.innerHTML = `
-                            <td class="py-3 px-4">${candidate.nrp}</td>
-                            <td class="py-3 px-4">${candidate.password}</td>
-                            <td class="py-3 px-4">${candidate.name || '-'}</td>
-                            <td class="py-3 px-4">${candidate.code || '-'}</td>
-                            <td class="py-3 px-4">
-                                <span class="px-2 py-1 rounded-full text-xs ${candidate.status === 'lulus' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}">
-                                    ${candidate.status === 'lulus' ? 'Lulus' : 'Tidak Lulus'}
-                                </span>
-                            </td>
-                            <td class="py-3 px-4">
-                                <button class="edit-button bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded mr-1" data-id="${candidateId}">
-                                    Edit
-                                </button>
-                                <button class="delete-button bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded" data-id="${candidateId}">
-                                    Hapus
-                                </button>
-                            </td>
-                        `;
-                        
-                        candidatesList.appendChild(row);
-                    });
-                    
-                    // Add event listeners to edit and delete buttons
-                    document.querySelectorAll('.edit-button').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const candidateId = this.getAttribute('data-id');
-                            editCandidate(candidateId);
-                        });
-                    });
-                    
-                    document.querySelectorAll('.delete-button').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const candidateId = this.getAttribute('data-id');
-                            if (confirm('Apakah Anda yakin ingin menghapus kandidat ini?')) {
-                                deleteCandidate(candidateId);
-                            }
-                        });
-                    });
-                });
-            }
-            
-            // Edit candidate
-            function editCandidate(candidateId) {
-                database.ref('candidates/' + candidateId).once('value', snapshot => {
-                    const candidate = snapshot.val();
-                    
-                    document.getElementById('editCandidateId').value = candidateId;
-                    document.getElementById('editNrp').value = candidate.nrp;
-                    document.getElementById('editPassword').value = candidate.password;
-                    document.getElementById('editName').value = candidate.name || '';
-                    document.getElementById('editCode').value = candidate.code || '';
-                    document.getElementById('editStatus').value = candidate.status;
-                    document.getElementById('editDetails').value = candidate.details;
-                    
-                    document.getElementById('editCandidateModal').classList.remove('hidden');
-                });
-            }
-            
-            // Delete candidate
-            function deleteCandidate(candidateId) {
-                database.ref('candidates/' + candidateId).remove()
-                    .then(() => {
-                        loadCandidates();
-                        alert('Kandidat berhasil dihapus!');
-                    })
-                    .catch(error => {
-                        alert('Error: ' + error.message);
-                    });
-            }
-            
             // Check if user is already logged in
             auth.onAuthStateChanged(user => {
                 if (user) {
                     // User is signed in
+                    console.log("Admin sudah login:", user.email);
                     document.getElementById('adminDashboard').classList.remove('hidden');
                     loadCandidates();
+                } else {
+                    console.log("Admin belum login");
                 }
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9624abbed7cdfe00',t:'MTc1MzAzNzcwNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9624c73d8383fce0',t:'MTc1MzAzODgzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
